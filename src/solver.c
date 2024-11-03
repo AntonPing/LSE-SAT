@@ -35,7 +35,6 @@ double full_update(const struct matrix* mat, struct state* state) {
     int col = mat->col;
     double scale = state->scale;
 
-    state->y = 0;
     for(int j = 0; j < col; j ++) {
         state->col_sum[j] = 0;
     }
@@ -49,12 +48,16 @@ double full_update(const struct matrix* mat, struct state* state) {
             } else {
                 state->exp_val[i * col + j] = exp(sign * scale * x);
                 state->col_sum[j] += state->exp_val[i * col + j];
-                state->y += 1 / state->col_sum[j];
             }
         }
     }
 
-    state->y = -1 / scale * log(state->y);
+    double sum = 0;
+    for(int j = 0; j < col; j ++) {
+        sum += 1 / state->col_sum[j];
+    }
+
+    state->y = -1 / scale * log(sum);
     return state->y;
 }
 
@@ -114,7 +117,6 @@ void solve_sat(const struct matrix* mat) {
     state.y = 0;
 
     state.scale = SCALE_START;
-    full_update(mat, &state);
 
     for(int bi = 0; bi < BIG_ITER; bi ++) {
         full_update(mat, &state);
